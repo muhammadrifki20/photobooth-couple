@@ -1,86 +1,68 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Couple Photobooth 💕</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Couple Photobooth 💕</title>
 
-  <!-- Google Font Lucu -->
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<!-- Font Lucu -->
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 
-  <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-    }
+<style>
+body {
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(135deg,#ff9a9e,#fad0c4);
+  font-family: Arial, sans-serif;
+}
 
-    h2 {
-      font-family: 'Pacifico', cursive;
-      color: white;
-      font-size: 28px;
-      margin-bottom: 10px;
-    }
+h2 {
+  font-family: 'Pacifico', cursive;
+  color: white;
+}
 
-    .booth {
-      background: white;
-      padding: 15px;
-      border-radius: 25px;
-      max-width: 320px;
-      margin: auto;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      position: relative;
-    }
+.booth {
+  background: white;
+  max-width: 320px;
+  margin: auto;
+  padding: 15px;
+  border-radius: 25px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
 
-    .booth::before {
-      content: "💖✨💖✨";
-      position: absolute;
-      top: -15px;
-      left: 0;
-      right: 0;
-      font-size: 20px;
-    }
+video {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  border-radius: 20px;
+  background: black;
+}
 
-    video, canvas {
-      width: 100%;
-      aspect-ratio: 3 / 4;
-      object-fit: cover;
-      border-radius: 20px;
-      background: black;
-    }
+input {
+  width: 90%;
+  padding: 8px;
+  margin: 10px 0;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
 
-    input {
-      width: 90%;
-      padding: 8px;
-      margin-top: 10px;
-      border-radius: 20px;
-      border: 1px solid #ccc;
-      text-align: center;
-      font-size: 14px;
-    }
+button {
+  padding: 10px 20px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 25px;
+  background: #ff69b4;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+}
 
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 25px;
-      background: #ff69b4;
-      color: white;
-      font-size: 15px;
-      cursor: pointer;
-    }
+#download { display:none; }
 
-    button:active {
-      transform: scale(0.95);
-    }
-
-    #download {
-      background: #ff1493;
-      display: none;
-    }
-  </style>
+canvas { display:none; }
+</style>
 </head>
 
 <body>
@@ -89,67 +71,88 @@
 
 <div class="booth">
   <video id="video" autoplay playsinline></video>
-
-  <input type="text" id="nameInput" placeholder="Nama couple 💑">
-
+  <input id="nameInput" placeholder="Nama Couple 💑">
   <button id="capture">📸 Ambil Foto</button>
-  <button id="download">⬇️ Download Foto</button>
-
-  <canvas id="canvas" style="display:none;"></canvas>
+  <button id="download">⬇️ Download Strip</button>
+  <canvas id="canvas"></canvas>
 </div>
 
 <script>
-  const video = document.getElementById("video");
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
-  const captureBtn = document.getElementById("capture");
-  const downloadBtn = document.getElementById("download");
-  const nameInput = document.getElementById("nameInput");
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const captureBtn = document.getElementById("capture");
+const downloadBtn = document.getElementById("download");
+const nameInput = document.getElementById("nameInput");
 
-  // AKTIFKAN KAMERA
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "user" },
-    audio: false
-  }).then(stream => {
-    video.srcObject = stream;
-  }).catch(() => {
-    alert("Kamera tidak bisa dibuka");
-  });
+let photos = [];
 
-  captureBtn.addEventListener("click", () => {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+// Kamera
+navigator.mediaDevices.getUserMedia({
+  video: { facingMode: "user" },
+  audio: false
+}).then(stream => {
+  video.srcObject = stream;
+});
 
-    // foto
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+// Ambil foto satu per klik
+captureBtn.onclick = () => {
+  if (photos.length >= 3) return;
 
-    // overlay lucu
-    ctx.fillStyle = "rgba(255,105,180,0.8)";
-    ctx.font = "30px Pacifico";
-    ctx.fillText("💖💖", 20, 40);
-    ctx.fillText("✨✨", canvas.width - 100, 40);
+  const temp = document.createElement("canvas");
+  temp.width = video.videoWidth;
+  temp.height = video.videoHeight;
+  temp.getContext("2d").drawImage(video,0,0);
+  photos.push(temp);
 
-    // nama & tanggal
-    const name = nameInput.value || "Couple 💑";
-    const date = new Date().toLocaleDateString("id-ID");
-
-    ctx.fillStyle = "white";
-    ctx.font = "28px Pacifico";
-    ctx.textAlign = "center";
-    ctx.fillText(name, canvas.width / 2, canvas.height - 60);
-
-    ctx.font = "18px Arial";
-    ctx.fillText(date, canvas.width / 2, canvas.height - 30);
-
+  if (photos.length === 3) {
+    createStrip();
     downloadBtn.style.display = "inline-block";
+  }
+};
+
+function createStrip() {
+  const stripWidth = 900;
+  const stripHeight = 1500;
+
+  canvas.width = stripWidth;
+  canvas.height = stripHeight;
+
+  // background lucu
+  ctx.fillStyle = "#ffe4ec";
+  ctx.fillRect(0,0,stripWidth,stripHeight);
+
+  // dekor
+  ctx.font = "50px Pacifico";
+  ctx.fillText("💖 ✨ 💖", 260, 60);
+
+  // foto
+  let y = 100;
+  photos.forEach(p => {
+    ctx.drawImage(p, 150, y, 600, 450);
+    y += 470;
   });
 
-  downloadBtn.addEventListener("click", () => {
-    const link = document.createElement("a");
-    link.download = "photobooth-couple.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  });
+  // nama & tanggal
+  const name = nameInput.value || "Couple 💑";
+  const date = new Date().toLocaleDateString("id-ID");
+
+  ctx.fillStyle = "#ff69b4";
+  ctx.font = "40px Pacifico";
+  ctx.textAlign = "center";
+  ctx.fillText(name, stripWidth/2, stripHeight - 80);
+
+  ctx.font = "24px Arial";
+  ctx.fillText(date, stripWidth/2, stripHeight - 40);
+}
+
+// Download
+downloadBtn.onclick = () => {
+  const link = document.createElement("a");
+  link.download = "photobooth-strip.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+};
 </script>
 
 </body>
