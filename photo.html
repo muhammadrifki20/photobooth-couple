@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Couple Photobooth 3 Strip</title>
+
+<style>
+body {
+  background: linear-gradient(135deg, #ffc0d9, #fff0f5);
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+h2 {
+  color: #ff1493;
+}
+
+video {
+  width: 300px;
+  height: 220px;
+  border-radius: 16px;
+  border: 6px solid #ff69b4;
+}
+
+canvas {
+  margin-top: 15px;
+  border-radius: 20px;
+  border: 10px solid #ff69b4;
+  background: white;
+}
+
+button {
+  margin: 10px;
+  padding: 12px 22px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: none;
+  background: #ff69b4;
+  color: white;
+  cursor: pointer;
+}
+button:hover {
+  background: #ff1493;
+}
+
+input {
+  padding: 8px;
+  margin: 5px;
+  border-radius: 8px;
+  border: 2px solid #ff69b4;
+}
+</style>
+</head>
+
+<body>
+
+<h2>💑 Couple Photobooth 💖</h2>
+
+<video id="video" autoplay></video><br>
+
+<input type="text" id="nameInput" placeholder="Nama Couple (mis: A & B)">
+<br>
+
+<button onclick="takePhoto()">📸 Ambil Foto</button>
+<button onclick="download()">⬇️ Download</button>
+
+<br>
+<canvas id="canvas" width="340" height="980"></canvas>
+
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let photos = [];
+let maxPhotos = 3;
+
+// Kamera
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => video.srcObject = stream);
+
+// Ambil foto per klik
+function takePhoto() {
+  if (photos.length >= maxPhotos) {
+    alert("Sudah 3 foto 💖");
+    return;
+  }
+
+  const temp = document.createElement("canvas");
+  temp.width = 300;
+  temp.height = 220;
+  temp.getContext("2d").drawImage(video, 0, 0, 300, 220);
+
+  photos.push(temp);
+  renderTemplate();
+}
+
+// Render template + footer
+function renderTemplate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Header
+  ctx.fillStyle = "#ff1493";
+  ctx.font = "28px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("💖 COUPLE PHOTOBOOTH 💖", canvas.width / 2, 45);
+
+  ctx.font = "20px Arial";
+  ctx.fillText("❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️", canvas.width / 2, 75);
+
+  // Foto strip
+  let y = 100;
+  photos.forEach(photo => {
+    ctx.drawImage(photo, 20, y, 300, 220);
+    ctx.font = "22px Arial";
+    ctx.fillText("💕 💞 💕 💞 💕 💞", canvas.width / 2, y + 250);
+    y += 270;
+  });
+
+  // FOOTER BOX
+  ctx.fillStyle = "#ffe4ec";
+  ctx.fillRect(20, canvas.height - 120, 300, 90);
+
+  ctx.strokeStyle = "#ff69b4";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(20, canvas.height - 120, 300, 90);
+
+  // Nama
+  ctx.fillStyle = "#ff1493";
+  ctx.font = "20px Arial";
+  ctx.fillText(
+    document.getElementById("nameInput").value || "Nama Couple",
+    canvas.width / 2,
+    canvas.height - 80
+  );
+
+  // Tanggal
+  ctx.font = "16px Arial";
+  ctx.fillText(
+    new Date().toLocaleDateString("id-ID"),
+    canvas.width / 2,
+    canvas.height - 50
+  );
+}
+
+// Download
+function download() {
+  const link = document.createElement("a");
+  link.download = "couple-photobooth.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+</script>
+
+</body>
+</html>
