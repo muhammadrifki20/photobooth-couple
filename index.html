@@ -13,8 +13,14 @@ body {
   margin: 0;
   padding: 20px;
   text-align: center;
-  background: linear-gradient(135deg,#ff9abf,#ffc1d9);
   font-family: Arial, sans-serif;
+
+  /* BACKGROUND PINK + GARIS KOTAK */
+  background-color: #ffc1d9;
+  background-image:
+    linear-gradient(#ffffff55 2px, transparent 2px),
+    linear-gradient(90deg, #ffffff55 2px, transparent 2px);
+  background-size: 40px 40px;
 }
 
 h2 {
@@ -111,23 +117,44 @@ captureBtn.onclick = () => {
   }
 };
 
+function drawGridBackground() {
+  ctx.fillStyle = "#ffc1d9";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.lineWidth = 2;
+
+  for (let x = 0; x < canvas.width; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,canvas.height);
+    ctx.stroke();
+  }
+
+  for (let y = 0; y < canvas.height; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    ctx.lineTo(canvas.width,y);
+    ctx.stroke();
+  }
+}
+
 function createStrip() {
   const stripWidth = 900;
   const photoWidth = 600;
   const photoHeight = 450;
-  const padding = 40;
   const gap = 40;
 
   canvas.width = stripWidth;
-  canvas.height = padding*2 + (photoHeight+gap)*3 + 160;
+  canvas.height = 100 + (photoHeight + gap) * 3 + 160;
 
-  // Background pink
-  ctx.fillStyle = "#ffc1d9";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // Background kotak-kotak
+  drawGridBackground();
 
   // Elemen lucu atas
   ctx.font = "48px Pacifico";
   ctx.textAlign = "center";
+  ctx.fillStyle = "#ff3d8b";
   ctx.fillText("💖 ✨ 💖 ✨ 💖", canvas.width/2, 70);
 
   let y = 100;
@@ -142,7 +169,7 @@ function createStrip() {
       photoHeight + 30
     );
 
-    // Foto normal
+    // Foto
     ctx.drawImage(
       p,
       (stripWidth-photoWidth)/2,
