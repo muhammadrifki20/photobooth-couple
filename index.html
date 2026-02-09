@@ -5,69 +5,65 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Couple Photobooth 💕</title>
 
-<!-- Font Lucu -->
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 
 <style>
-body {
-  margin: 0;
-  padding: 20px;
-  text-align: center;
-  font-family: Arial, sans-serif;
+body{
+  margin:0;
+  padding:20px;
+  text-align:center;
+  font-family:Arial,sans-serif;
 
-  /* BACKGROUND PINK + GARIS KOTAK */
-  background-color: #ffc1d9;
+  /* Background pink + grid */
+  background-color:#ffc1d9;
   background-image:
     linear-gradient(#ffffff55 2px, transparent 2px),
     linear-gradient(90deg, #ffffff55 2px, transparent 2px);
-  background-size: 40px 40px;
+  background-size:40px 40px;
 }
 
-h2 {
-  font-family: 'Pacifico', cursive;
-  color: white;
-  margin-bottom: 10px;
+h2{
+  font-family:'Pacifico',cursive;
+  color:white;
 }
 
-.booth {
-  background: white;
-  max-width: 340px;
-  margin: auto;
-  padding: 15px;
-  border-radius: 25px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+.booth{
+  background:white;
+  max-width:340px;
+  margin:auto;
+  padding:15px;
+  border-radius:25px;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
 }
 
-video {
-  width: 100%;
-  aspect-ratio: 3/4;
-  object-fit: cover;
-  border-radius: 20px;
-  background: black;
+video{
+  width:100%;
+  aspect-ratio:3/4;
+  object-fit:cover;
+  border-radius:20px;
+  background:black;
 }
 
-input {
-  width: 90%;
-  padding: 8px;
-  margin: 10px 0;
-  border-radius: 20px;
-  border: 1px solid #ccc;
-  text-align: center;
+input{
+  width:90%;
+  padding:8px;
+  margin:10px 0;
+  border-radius:20px;
+  border:1px solid #ccc;
+  text-align:center;
 }
 
-button {
-  padding: 10px 20px;
-  margin-top: 8px;
-  border: none;
-  border-radius: 25px;
-  background: #ff5fa2;
-  color: white;
-  font-size: 15px;
-  cursor: pointer;
+button{
+  padding:10px 20px;
+  border:none;
+  border-radius:25px;
+  background:#ff5fa2;
+  color:white;
+  cursor:pointer;
 }
 
-#download { display:none; }
-canvas { display:none; }
+#download{display:none}
+canvas{display:none}
 </style>
 </head>
 
@@ -95,43 +91,42 @@ let photos = [];
 
 // Aktifkan kamera
 navigator.mediaDevices.getUserMedia({
-  video: { facingMode: "user" },
-  audio: false
-}).then(stream => {
-  video.srcObject = stream;
-});
+  video:{facingMode:"user"},
+  audio:false
+}).then(stream=>video.srcObject=stream);
 
-// Ambil foto per klik
-captureBtn.onclick = () => {
-  if (photos.length >= 3) return;
+// Ambil foto
+captureBtn.onclick=()=>{
+  if(photos.length>=3) return;
 
-  const temp = document.createElement("canvas");
-  temp.width = video.videoWidth;
-  temp.height = video.videoHeight;
+  const temp=document.createElement("canvas");
+  temp.width=video.videoWidth;
+  temp.height=video.videoHeight;
   temp.getContext("2d").drawImage(video,0,0);
   photos.push(temp);
 
-  if (photos.length === 3) {
+  if(photos.length===3){
     createStrip();
-    downloadBtn.style.display = "inline-block";
+    downloadBtn.style.display="inline-block";
   }
 };
 
-function drawGridBackground() {
-  ctx.fillStyle = "#ffc1d9";
+// Background grid
+function drawGrid(){
+  ctx.fillStyle="#ffc1d9";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  ctx.strokeStyle = "rgba(255,255,255,0.35)";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle="rgba(255,255,255,0.35)";
+  ctx.lineWidth=2;
 
-  for (let x = 0; x < canvas.width; x += 40) {
+  for(let x=0;x<canvas.width;x+=40){
     ctx.beginPath();
     ctx.moveTo(x,0);
     ctx.lineTo(x,canvas.height);
     ctx.stroke();
   }
 
-  for (let y = 0; y < canvas.height; y += 40) {
+  for(let y=0;y<canvas.height;y+=40){
     ctx.beginPath();
     ctx.moveTo(0,y);
     ctx.lineTo(canvas.width,y);
@@ -139,66 +134,71 @@ function drawGridBackground() {
   }
 }
 
-function createStrip() {
-  const stripWidth = 900;
-  const photoWidth = 600;
-  const photoHeight = 450;
-  const gap = 40;
+// Draw foto tanpa gepeng
+function drawPhotoCover(img,x,y,w,h){
+  const ir=img.width/img.height;
+  const fr=w/h;
+  let sx,sy,sw,sh;
 
-  canvas.width = stripWidth;
-  canvas.height = 100 + (photoHeight + gap) * 3 + 160;
+  if(ir>fr){
+    sh=img.height;
+    sw=sh*fr;
+    sx=(img.width-sw)/2;
+    sy=0;
+  }else{
+    sw=img.width;
+    sh=sw/fr;
+    sx=0;
+    sy=(img.height-sh)/2;
+  }
 
-  // Background kotak-kotak
-  drawGridBackground();
+  ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+}
 
-  // Elemen lucu atas
-  ctx.font = "48px Pacifico";
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#ff3d8b";
-  ctx.fillText("💖 ✨ 💖 ✨ 💖", canvas.width/2, 70);
+function createStrip(){
+  const stripW=900;
+  const photoW=520;
+  const photoH=700;
+  const gap=40;
 
-  let y = 100;
+  canvas.width=stripW;
+  canvas.height=160 + (photoH+gap)*3 + 200;
 
-  photos.forEach(p => {
-    // Frame putih
-    ctx.fillStyle = "white";
-    ctx.fillRect(
-      (stripWidth-photoWidth)/2 - 15,
-      y - 15,
-      photoWidth + 30,
-      photoHeight + 30
-    );
+  drawGrid();
 
-    // Foto
-    ctx.drawImage(
-      p,
-      (stripWidth-photoWidth)/2,
-      y,
-      photoWidth,
-      photoHeight
-    );
+  /* ===== TULISAN COUPLE DI ATAS FOTO ===== */
+  ctx.font="54px Pacifico";
+  ctx.fillStyle="#ff3d8b";
+  ctx.textAlign="center";
+  ctx.fillText("Couple 💕", stripW/2, 90);
 
-    y += photoHeight + gap;
+  /* ===== FOTO ===== */
+  let y=140;
+  photos.forEach(p=>{
+    ctx.fillStyle="white";
+    ctx.fillRect((stripW-photoW)/2-15,y-15,photoW+30,photoH+30);
+    drawPhotoCover(p,(stripW-photoW)/2,y,photoW,photoH);
+    y+=photoH+gap;
   });
 
-  // Nama & tanggal
-  const name = nameInput.value || "Couple 💑";
-  const date = new Date().toLocaleDateString("id-ID");
+  /* ===== NAMA & TANGGAL ===== */
+  const name=nameInput.value||"Couple 💑";
+  const date=new Date().toLocaleDateString("id-ID");
 
-  ctx.fillStyle = "#ff3d8b";
-  ctx.font = "42px Pacifico";
-  ctx.fillText(name, canvas.width/2, canvas.height - 90);
+  ctx.font="42px Pacifico";
+  ctx.fillStyle="#ff3d8b";
+  ctx.fillText(name, stripW/2, canvas.height-90);
 
-  ctx.font = "24px Arial";
-  ctx.fillText(date, canvas.width/2, canvas.height - 50);
+  ctx.font="24px Arial";
+  ctx.fillText(date, stripW/2, canvas.height-50);
 }
 
 // Download
-downloadBtn.onclick = () => {
-  const link = document.createElement("a");
-  link.download = "photobooth-couple-strip.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+downloadBtn.onclick=()=>{
+  const a=document.createElement("a");
+  a.download="photobooth-couple-strip.png";
+  a.href=canvas.toDataURL();
+  a.click();
 };
 </script>
 
