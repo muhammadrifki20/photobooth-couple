@@ -1,47 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Couple Photobooth 💕</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  padding:20px;
+  text-align:center;
+  font-family:Arial,sans-serif;
+
+  background-color:#ffc1d9;
+  background-image:
+    linear-gradient(#ffffff55 2px, transparent 2px),
+    linear-gradient(90deg, #ffffff55 2px, transparent 2px);
+  background-size:40px 40px;
+}
+
+h2{
+  font-family:'Pacifico',cursive;
+  color:white;
+}
+
+.booth{
+  background:white;
+  max-width:340px;
+  margin:auto;
+  padding:15px;
+  border-radius:25px;
+}
+
+video{
+  width:100%;
+  aspect-ratio:3/4;
+  object-fit:cover;
+  border-radius:20px;
+  background:black;
+}
+
+input,button{
+  margin-top:10px;
+  padding:10px;
+  width:90%;
+  border-radius:20px;
+  border:1px solid #ccc;
+}
+
+button{
+  background:#ff5fa2;
+  color:white;
+  border:none;
+}
+
+#download{display:none}
+canvas{display:none}
+</style>
+</head>
+
+<body>
+
+<h2>Couple Photobooth 💕</h2>
+
+<div class="booth">
+  <video id="video" autoplay playsinline></video>
+  <input id="nameInput" placeholder="Nama Couple 💑">
+  <button id="capture">📸 Ambil Foto</button>
+  <button id="download">⬇️ Download</button>
+  <canvas id="canvas"></canvas>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const captureBtn = document.getElementById("capture");
-const downloadBtn = document.getElementById("download");
-const nameInput = document.getElementById("nameInput");
+const capture = document.getElementById("capture");
+const download = document.getElementById("download");
 
 let photos = [];
 
-// Aktifkan kamera
 navigator.mediaDevices.getUserMedia({
-  video: { facingMode: "user" },
-  audio: false
-}).then(stream => {
-  video.srcObject = stream;
-}).catch(err => {
-  alert("Kamera tidak bisa diakses 😢");
-  console.error(err);
-});
+  video:{ facingMode:"user" },
+  audio:false
+})
+.then(stream => video.srcObject = stream)
+.catch(err => alert("Kamera tidak bisa dibuka"));
 
-// Ambil foto
-captureBtn.onclick = () => {
-  if (photos.length >= 3) return;
+capture.onclick = () => {
+  if(photos.length >= 3) return;
 
   const temp = document.createElement("canvas");
   temp.width = video.videoWidth;
   temp.height = video.videoHeight;
-  temp.getContext("2d").drawImage(video, 0, 0);
+  temp.getContext("2d").drawImage(video,0,0);
   photos.push(temp);
 
-  if (photos.length === 3) {
-    createStrip();
-    downloadBtn.style.display = "inline-block";
+  if(photos.length === 3){
+    canvas.width = 600;
+    canvas.height = 2000;
+
+    ctx.fillStyle="#ffc1d9";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    let y = 100;
+    photos.forEach(p=>{
+      ctx.drawImage(p,100,y,400,550);
+      y += 600;
+    });
+
+    download.style.display="block";
   }
 };
 
-// ===== fungsi lain tetap =====
-// drawGrid()
-// drawPhotoCover()
-// createStrip()
-// downloadBtn.onclick
+download.onclick = () => {
+  const a = document.createElement("a");
+  a.download="couple.png";
+  a.href = canvas.toDataURL();
+  a.click();
+};
 
 });
 </script>
+
+</body>
+</html>
