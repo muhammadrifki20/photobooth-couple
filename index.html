@@ -1,84 +1,3 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Couple Photobooth 💕</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-
-<style>
-body{
-  margin:0;
-  padding:20px;
-  text-align:center;
-  font-family:Arial,sans-serif;
-
-  /* Background pink + grid */
-  background-color:#ffc1d9;
-  background-image:
-    linear-gradient(#ffffff55 2px, transparent 2px),
-    linear-gradient(90deg, #ffffff55 2px, transparent 2px);
-  background-size:40px 40px;
-}
-
-h2{
-  font-family:'Pacifico',cursive;
-  color:white;
-}
-
-.booth{
-  background:white;
-  max-width:340px;
-  margin:auto;
-  padding:15px;
-  border-radius:25px;
-  box-shadow:0 10px 25px rgba(0,0,0,.25);
-}
-
-video{
-  width:100%;
-  aspect-ratio:3/4;
-  object-fit:cover;
-  border-radius:20px;
-  background:black;
-}
-
-input{
-  width:90%;
-  padding:8px;
-  margin:10px 0;
-  border-radius:20px;
-  border:1px solid #ccc;
-  text-align:center;
-}
-
-button{
-  padding:10px 20px;
-  border:none;
-  border-radius:25px;
-  background:#ff5fa2;
-  color:white;
-  cursor:pointer;
-}
-
-#download{display:none}
-canvas{display:none}
-</style>
-</head>
-
-<body>
-
-<h2>Couple Photobooth 💕</h2>
-
-<div class="booth">
-  <video id="video" autoplay playsinline></video>
-  <input id="nameInput" placeholder="Nama Couple 💑">
-  <button id="capture">📸 Ambil Foto</button>
-  <button id="download">⬇️ Download Strip</button>
-  <canvas id="canvas"></canvas>
-</div>
-
 <script>
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
@@ -89,13 +8,26 @@ const nameInput = document.getElementById("nameInput");
 
 let photos = [];
 
-// Aktifkan kamera
-navigator.mediaDevices.getUserMedia({
-  video:{facingMode:"user"},
-  audio:false
-}).then(stream=>video.srcObject=stream);
+/* ===== AKTIFKAN KAMERA BELAKANG ===== */
+async function startCamera(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{
+        facingMode:{ ideal:"environment" }, // 👈 kamera belakang
+        width:{ ideal:1280 },
+        height:{ ideal:720 }
+      },
+      audio:false
+    });
+    video.srcObject = stream;
+  }catch(e){
+    alert("Kamera tidak bisa diakses");
+    console.error(e);
+  }
+}
+startCamera();
 
-// Ambil foto
+/* ===== AMBIL FOTO ===== */
 captureBtn.onclick=()=>{
   if(photos.length>=3) return;
 
@@ -111,7 +43,7 @@ captureBtn.onclick=()=>{
   }
 };
 
-// Background grid
+/* ===== BACKGROUND GRID ===== */
 function drawGrid(){
   ctx.fillStyle="#ffc1d9";
   ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -125,7 +57,6 @@ function drawGrid(){
     ctx.lineTo(x,canvas.height);
     ctx.stroke();
   }
-
   for(let y=0;y<canvas.height;y+=40){
     ctx.beginPath();
     ctx.moveTo(0,y);
@@ -134,7 +65,7 @@ function drawGrid(){
   }
 }
 
-// Draw foto tanpa gepeng
+/* ===== FOTO TANPA GEPENG ===== */
 function drawPhotoCover(img,x,y,w,h){
   const ir=img.width/img.height;
   const fr=w/h;
@@ -151,10 +82,35 @@ function drawPhotoCover(img,x,y,w,h){
     sx=0;
     sy=(img.height-sh)/2;
   }
-
   ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
 }
 
+/* ===== BINTANG PUTIH ===== */
+function drawStar(x,y,r){
+  ctx.beginPath();
+  for(let i=0;i<10;i++){
+    const a=Math.PI/5*i;
+    const rr=i%2===0?r:r/2;
+    ctx.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);
+  }
+  ctx.closePath();
+  ctx.fillStyle="white";
+  ctx.fill();
+}
+
+/* ===== PESAWAT KERTAS ===== */
+function drawPaperPlane(x,y,s){
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x+s,y+s/2);
+  ctx.lineTo(x,y+s);
+  ctx.lineTo(x+s/4,y+s/2);
+  ctx.closePath();
+  ctx.fillStyle="white";
+  ctx.fill();
+}
+
+/* ===== STRIP FOTO ===== */
 function createStrip(){
   const stripW=900;
   const photoW=520;
@@ -166,13 +122,19 @@ function createStrip(){
 
   drawGrid();
 
-  /* ===== TULISAN COUPLE DI ATAS FOTO ===== */
+  /* COUPLE TEXT */
   ctx.font="54px Pacifico";
   ctx.fillStyle="#ff3d8b";
   ctx.textAlign="center";
   ctx.fillText("Couple 💕", stripW/2, 90);
 
-  /* ===== FOTO ===== */
+  /* BINTANG & PESAWAT */
+  drawStar(60,80,14);
+  drawStar(stripW-60,120,12);
+  drawPaperPlane(20,canvas.height/2,45);
+  drawPaperPlane(stripW-65,canvas.height/2-40,45);
+
+  /* FOTO */
   let y=140;
   photos.forEach(p=>{
     ctx.fillStyle="white";
@@ -181,7 +143,7 @@ function createStrip(){
     y+=photoH+gap;
   });
 
-  /* ===== NAMA & TANGGAL ===== */
+  /* NAMA & TANGGAL */
   const name=nameInput.value||"Couple 💑";
   const date=new Date().toLocaleDateString("id-ID");
 
@@ -193,7 +155,7 @@ function createStrip(){
   ctx.fillText(date, stripW/2, canvas.height-50);
 }
 
-// Download
+/* ===== DOWNLOAD ===== */
 downloadBtn.onclick=()=>{
   const a=document.createElement("a");
   a.download="photobooth-couple-strip.png";
@@ -201,6 +163,3 @@ downloadBtn.onclick=()=>{
   a.click();
 };
 </script>
-
-</body>
-</html>
