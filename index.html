@@ -13,18 +13,19 @@ body {
   margin: 0;
   padding: 20px;
   text-align: center;
-  background: linear-gradient(135deg,#ff9a9e,#fad0c4);
+  background: linear-gradient(135deg,#ff9abf,#ffc1d9);
   font-family: Arial, sans-serif;
 }
 
 h2 {
   font-family: 'Pacifico', cursive;
   color: white;
+  margin-bottom: 10px;
 }
 
 .booth {
   background: white;
-  max-width: 320px;
+  max-width: 340px;
   margin: auto;
   padding: 15px;
   border-radius: 25px;
@@ -53,14 +54,13 @@ button {
   margin-top: 8px;
   border: none;
   border-radius: 25px;
-  background: #ff69b4;
+  background: #ff5fa2;
   color: white;
   font-size: 15px;
   cursor: pointer;
 }
 
 #download { display:none; }
-
 canvas { display:none; }
 </style>
 </head>
@@ -87,7 +87,7 @@ const nameInput = document.getElementById("nameInput");
 
 let photos = [];
 
-// Kamera
+// Aktifkan kamera
 navigator.mediaDevices.getUserMedia({
   video: { facingMode: "user" },
   audio: false
@@ -95,7 +95,7 @@ navigator.mediaDevices.getUserMedia({
   video.srcObject = stream;
 });
 
-// Ambil foto satu per klik
+// Ambil foto per klik
 captureBtn.onclick = () => {
   if (photos.length >= 3) return;
 
@@ -113,43 +113,63 @@ captureBtn.onclick = () => {
 
 function createStrip() {
   const stripWidth = 900;
-  const stripHeight = 1500;
+  const photoWidth = 600;
+  const photoHeight = 450;
+  const padding = 40;
+  const gap = 40;
 
   canvas.width = stripWidth;
-  canvas.height = stripHeight;
+  canvas.height = padding*2 + (photoHeight+gap)*3 + 160;
 
-  // background lucu
-  ctx.fillStyle = "#ffe4ec";
-  ctx.fillRect(0,0,stripWidth,stripHeight);
+  // Background pink
+  ctx.fillStyle = "#ffc1d9";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // dekor
-  ctx.font = "50px Pacifico";
-  ctx.fillText("💖 ✨ 💖", 260, 60);
+  // Elemen lucu atas
+  ctx.font = "48px Pacifico";
+  ctx.textAlign = "center";
+  ctx.fillText("💖 ✨ 💖 ✨ 💖", canvas.width/2, 70);
 
-  // foto
   let y = 100;
+
   photos.forEach(p => {
-    ctx.drawImage(p, 150, y, 600, 450);
-    y += 470;
+    // Frame putih
+    ctx.fillStyle = "white";
+    ctx.fillRect(
+      (stripWidth-photoWidth)/2 - 15,
+      y - 15,
+      photoWidth + 30,
+      photoHeight + 30
+    );
+
+    // Foto normal
+    ctx.drawImage(
+      p,
+      (stripWidth-photoWidth)/2,
+      y,
+      photoWidth,
+      photoHeight
+    );
+
+    y += photoHeight + gap;
   });
 
-  // nama & tanggal
+  // Nama & tanggal
   const name = nameInput.value || "Couple 💑";
   const date = new Date().toLocaleDateString("id-ID");
 
-  ctx.fillStyle = "#ff69b4";
-  ctx.font = "40px Pacifico";
-  ctx.textAlign = "center";
-  ctx.fillText(name, stripWidth/2, stripHeight - 80);
+  ctx.fillStyle = "#ff3d8b";
+  ctx.font = "42px Pacifico";
+  ctx.fillText(name, canvas.width/2, canvas.height - 90);
 
   ctx.font = "24px Arial";
-  ctx.fillText(date, stripWidth/2, stripHeight - 40);
+  ctx.fillText(date, canvas.width/2, canvas.height - 50);
 }
 
 // Download
 downloadBtn.onclick = () => {
   const link = document.createElement("a");
-  link.download = "photobooth-strip.png";
+  link.download = "photobooth-couple-strip.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
 };
