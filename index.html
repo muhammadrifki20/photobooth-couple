@@ -13,7 +13,6 @@ body{
   padding:20px;
   text-align:center;
   font-family:Arial,sans-serif;
-
   background-color:#ffc1d9;
   background-image:
     linear-gradient(#ffffff55 2px, transparent 2px),
@@ -53,7 +52,7 @@ input{
 }
 
 button{
-  padding:10px 20px;
+  padding:10px 18px;
   border:none;
   border-radius:25px;
   background:#ff5fa2;
@@ -74,8 +73,11 @@ canvas{display:none}
 <div class="booth">
   <video id="video" autoplay playsinline></video>
   <input id="nameInput" placeholder="Nama Couple 💑">
+
+  <button id="switchCam">🔄 Ganti Kamera</button><br>
   <button id="capture">📸 Ambil Foto</button>
   <button id="download">⬇️ Download Strip</button>
+
   <canvas id="canvas"></canvas>
 </div>
 
@@ -85,19 +87,34 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const captureBtn = document.getElementById("capture");
 const downloadBtn = document.getElementById("download");
+const switchCamBtn = document.getElementById("switchCam");
 const nameInput = document.getElementById("nameInput");
 
 let photos = [];
+let currentFacing = "environment";
+let stream = null;
 
-/* ===== AKTIFKAN KAMERA BELAKANG ===== */
-navigator.mediaDevices.getUserMedia({
-  video:{ facingMode:{ ideal:"environment" } },
-  audio:false
-}).then(stream=>{
+/* ===== AKTIFKAN KAMERA ===== */
+async function startCamera(){
+  if(stream){
+    stream.getTracks().forEach(t=>t.stop());
+  }
+
+  stream = await navigator.mediaDevices.getUserMedia({
+    video:{ facingMode:{ ideal: currentFacing }},
+    audio:false
+  });
+
   video.srcObject = stream;
-}).catch(err=>{
-  alert("Kamera tidak bisa diakses");
-});
+}
+
+startCamera();
+
+/* ===== GANTI KAMERA ===== */
+switchCamBtn.onclick = ()=>{
+  currentFacing = currentFacing === "user" ? "environment" : "user";
+  startCamera();
+};
 
 /* ===== AMBIL FOTO ===== */
 captureBtn.onclick = ()=>{
@@ -129,7 +146,6 @@ function drawGrid(){
     ctx.lineTo(x,canvas.height);
     ctx.stroke();
   }
-
   for(let y=0;y<canvas.height;y+=40){
     ctx.beginPath();
     ctx.moveTo(0,y);
@@ -138,7 +154,7 @@ function drawGrid(){
   }
 }
 
-/* ===== FOTO TIDAK GEPENG ===== */
+/* ===== FOTO PROPORSIONAL ===== */
 function drawPhotoCover(img,x,y,w,h){
   const ir = img.width/img.height;
   const fr = w/h;
@@ -159,7 +175,7 @@ function drawPhotoCover(img,x,y,w,h){
   ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
 }
 
-/* ===== BINTANG ===== */
+/* ===== DEKORASI ===== */
 function drawStar(x,y,r){
   ctx.save();
   ctx.translate(x,y);
@@ -177,67 +193,56 @@ function drawStar(x,y,r){
   ctx.restore();
 }
 
-/* ===== PESAWAT KERTAS ===== */
-function drawPaperPlane(x,y,size){
+function drawPaperPlane(x,y,s){
   ctx.fillStyle="white";
   ctx.beginPath();
   ctx.moveTo(x,y);
-  ctx.lineTo(x+size,y+size/2);
-  ctx.lineTo(x,y+size);
-  ctx.lineTo(x+size*0.2,y+size/2);
+  ctx.lineTo(x+s,y+s/2);
+  ctx.lineTo(x,y+s);
+  ctx.lineTo(x+s*0.2,y+s/2);
   ctx.closePath();
   ctx.fill();
 }
 
-/* ===== STRIP FOTO ===== */
+/* ===== STRIP ===== */
 function createStrip(){
-  const stripW = 900;
-  const photoW = 520;
-  const photoH = 700;
-  const gap = 40;
-
-  canvas.width = stripW;
-  canvas.height = 160 + (photoH+gap)*3 + 200;
+  const stripW=900, photoW=520, photoH=700, gap=40;
+  canvas.width=stripW;
+  canvas.height=160+(photoH+gap)*3+260;
 
   drawGrid();
 
-  ctx.font="54px Pacifico";
+  ctx.font="60px Pacifico";
   ctx.fillStyle="#ff3d8b";
   ctx.textAlign="center";
-  ctx.fillText("Couple 💕", stripW/2, 90);
+  ctx.fillText("Couple 💕", stripW/2, 95);
 
-  let y = 140;
-
+  let y=140;
   photos.forEach(p=>{
-    const xPhoto = (stripW-photoW)/2;
-
+    const x=(stripW-photoW)/2;
     ctx.fillStyle="white";
-    ctx.fillRect(xPhoto-15,y-15,photoW+30,photoH+30);
+    ctx.fillRect(x-15,y-15,photoW+30,photoH+30);
+    drawPhotoCover(p,x,y,photoW,photoH);
 
-    drawPhotoCover(p,xPhoto,y,photoW,photoH);
+    drawStar(x-40,y+120,10);
+    drawStar(x+photoW+40,y+200,8);
+    drawPaperPlane(x-70,y+photoH-120,32);
+    drawPaperPlane(x+photoW+40,y+50,32);
 
-    drawStar(xPhoto-40,y+100,10);
-    drawStar(xPhoto+photoW+40,y+200,8);
-
-    drawPaperPlane(xPhoto-70,y+photoH-120,30);
-    drawPaperPlane(xPhoto+photoW+40,y+40,30);
-
-    y += photoH + gap;
+    y+=photoH+gap;
   });
 
-  const name = nameInput.value || "Couple 💑";
-  const date = new Date().toLocaleDateString("id-ID");
-
-  ctx.font="42px Pacifico";
+  /* ===== NAMA & TANGGAL DIPERBESAR ===== */
+  ctx.font="52px Pacifico";
   ctx.fillStyle="#ff3d8b";
-  ctx.fillText(name, stripW/2, canvas.height-90);
+  ctx.fillText(nameInput.value||"Couple 💑", stripW/2, canvas.height-120);
 
-  ctx.font="24px Arial";
-  ctx.fillText(date, stripW/2, canvas.height-50);
+  ctx.font="32px Arial";
+  ctx.fillText(new Date().toLocaleDateString("id-ID"), stripW/2, canvas.height-70);
 }
 
 /* ===== DOWNLOAD ===== */
-downloadBtn.onclick = ()=>{
+downloadBtn.onclick=()=>{
   const a=document.createElement("a");
   a.download="photobooth-couple.png";
   a.href=canvas.toDataURL("image/png");
