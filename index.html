@@ -32,6 +32,7 @@ h2{
   margin:auto;
   padding:15px;
   border-radius:25px;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
 }
 
 video{
@@ -42,18 +43,23 @@ video{
   background:black;
 }
 
-input,button{
-  margin-top:10px;
-  padding:10px;
+input{
   width:90%;
+  padding:8px;
+  margin:10px 0;
   border-radius:20px;
   border:1px solid #ccc;
+  text-align:center;
 }
 
 button{
+  padding:10px 20px;
+  border:none;
+  border-radius:25px;
   background:#ff5fa2;
   color:white;
-  border:none;
+  cursor:pointer;
+  margin:5px;
 }
 
 #download{display:none}
@@ -69,29 +75,32 @@ canvas{display:none}
   <video id="video" autoplay playsinline></video>
   <input id="nameInput" placeholder="Nama Couple 💑">
   <button id="capture">📸 Ambil Foto</button>
-  <button id="download">⬇️ Download</button>
+  <button id="download">⬇️ Download Strip</button>
   <canvas id="canvas"></canvas>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const capture = document.getElementById("capture");
-const download = document.getElementById("download");
+const captureBtn = document.getElementById("capture");
+const downloadBtn = document.getElementById("download");
+const nameInput = document.getElementById("nameInput");
 
 let photos = [];
 
+/* ===== AKTIFKAN KAMERA BELAKANG ===== */
 navigator.mediaDevices.getUserMedia({
-  video:{ facingMode:"user" },
+  video:{ facingMode:{ ideal:"environment" } },
   audio:false
-})
-.then(stream => video.srcObject = stream)
-.catch(err => alert("Kamera tidak bisa dibuka"));
+}).then(stream=>{
+  video.srcObject = stream;
+}).catch(err=>{
+  alert("Kamera tidak bisa diakses");
+});
 
-capture.onclick = () => {
+/* ===== AMBIL FOTO ===== */
+captureBtn.onclick = ()=>{
   if(photos.length >= 3) return;
 
   const temp = document.createElement("canvas");
@@ -101,30 +110,139 @@ capture.onclick = () => {
   photos.push(temp);
 
   if(photos.length === 3){
-    canvas.width = 600;
-    canvas.height = 2000;
-
-    ctx.fillStyle="#ffc1d9";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    let y = 100;
-    photos.forEach(p=>{
-      ctx.drawImage(p,100,y,400,550);
-      y += 600;
-    });
-
-    download.style.display="block";
+    createStrip();
+    downloadBtn.style.display = "inline-block";
   }
 };
 
-download.onclick = () => {
-  const a = document.createElement("a");
-  a.download="couple.png";
-  a.href = canvas.toDataURL();
+/* ===== BACKGROUND GRID ===== */
+function drawGrid(){
+  ctx.fillStyle="#ffc1d9";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.strokeStyle="rgba(255,255,255,0.35)";
+  ctx.lineWidth=2;
+
+  for(let x=0;x<canvas.width;x+=40){
+    ctx.beginPath();
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,canvas.height);
+    ctx.stroke();
+  }
+
+  for(let y=0;y<canvas.height;y+=40){
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    ctx.lineTo(canvas.width,y);
+    ctx.stroke();
+  }
+}
+
+/* ===== FOTO TIDAK GEPENG ===== */
+function drawPhotoCover(img,x,y,w,h){
+  const ir = img.width/img.height;
+  const fr = w/h;
+  let sx,sy,sw,sh;
+
+  if(ir > fr){
+    sh = img.height;
+    sw = sh * fr;
+    sx = (img.width - sw)/2;
+    sy = 0;
+  }else{
+    sw = img.width;
+    sh = sw / fr;
+    sx = 0;
+    sy = (img.height - sh)/2;
+  }
+
+  ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+}
+
+/* ===== BINTANG ===== */
+function drawStar(x,y,r){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.beginPath();
+  ctx.moveTo(0,-r);
+  for(let i=0;i<5;i++){
+    ctx.rotate(Math.PI/5);
+    ctx.lineTo(0,-r*0.5);
+    ctx.rotate(Math.PI/5);
+    ctx.lineTo(0,-r);
+  }
+  ctx.closePath();
+  ctx.fillStyle="white";
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ===== PESAWAT KERTAS ===== */
+function drawPaperPlane(x,y,size){
+  ctx.fillStyle="white";
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x+size,y+size/2);
+  ctx.lineTo(x,y+size);
+  ctx.lineTo(x+size*0.2,y+size/2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* ===== STRIP FOTO ===== */
+function createStrip(){
+  const stripW = 900;
+  const photoW = 520;
+  const photoH = 700;
+  const gap = 40;
+
+  canvas.width = stripW;
+  canvas.height = 160 + (photoH+gap)*3 + 200;
+
+  drawGrid();
+
+  ctx.font="54px Pacifico";
+  ctx.fillStyle="#ff3d8b";
+  ctx.textAlign="center";
+  ctx.fillText("Couple 💕", stripW/2, 90);
+
+  let y = 140;
+
+  photos.forEach(p=>{
+    const xPhoto = (stripW-photoW)/2;
+
+    ctx.fillStyle="white";
+    ctx.fillRect(xPhoto-15,y-15,photoW+30,photoH+30);
+
+    drawPhotoCover(p,xPhoto,y,photoW,photoH);
+
+    drawStar(xPhoto-40,y+100,10);
+    drawStar(xPhoto+photoW+40,y+200,8);
+
+    drawPaperPlane(xPhoto-70,y+photoH-120,30);
+    drawPaperPlane(xPhoto+photoW+40,y+40,30);
+
+    y += photoH + gap;
+  });
+
+  const name = nameInput.value || "Couple 💑";
+  const date = new Date().toLocaleDateString("id-ID");
+
+  ctx.font="42px Pacifico";
+  ctx.fillStyle="#ff3d8b";
+  ctx.fillText(name, stripW/2, canvas.height-90);
+
+  ctx.font="24px Arial";
+  ctx.fillText(date, stripW/2, canvas.height-50);
+}
+
+/* ===== DOWNLOAD ===== */
+downloadBtn.onclick = ()=>{
+  const a=document.createElement("a");
+  a.download="photobooth-couple.png";
+  a.href=canvas.toDataURL("image/png");
   a.click();
 };
-
-});
 </script>
 
 </body>
